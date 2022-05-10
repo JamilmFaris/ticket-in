@@ -1,0 +1,10 @@
+<resources>
+    <string name="app_name">Bus Reservation System</string>
+    <string name="enter_your_first_name">Enter your first name</string>
+    <string name="enter_your_last_name">Enter your last name</string>
+    <string name="enter_your_phone_number">Enter your phone number</string>
+    <string name="enter_your_password">Enter your password</string>
+    <string name="signup">Signup</string>
+    <string name="login">login</string>
+    <string name="booked">Booked</string>
+</resources>
