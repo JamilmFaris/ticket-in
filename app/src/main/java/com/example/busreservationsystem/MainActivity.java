@@ -4,7 +4,9 @@ import androidx.appcompat.app.AppCompatActivity;
 import androidx.recyclerview.widget.GridLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
 
+import android.content.Context;
 import android.content.Intent;
+import android.content.SharedPreferences;
 import android.os.Bundle;
 import android.view.View;
 import android.widget.Button;
@@ -30,14 +32,21 @@ import java.util.ArrayList;
 
 public class MainActivity extends AppCompatActivity {
     public static String SHARED_PREFS = "sharedPrefs";
-
     String url;
-
     public static Button login, signup;
+    //TODO : remove token value
+    public static String token = "";
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
+
+        /// if we have token then go to the Trips activity
+        if(!token.isEmpty()){
+            startActivity(new Intent(this, Trips.class));
+        }
+
+
         ///initialize
         login = findViewById(R.id.go_login);
         signup = findViewById(R.id.go_signup);
@@ -60,8 +69,31 @@ public class MainActivity extends AppCompatActivity {
             }
         });
 
-        startActivity(new Intent(MainActivity.this, Trips.class));
+        //startActivity(new Intent(MainActivity.this, Trips.class));
 
     }
+    @Override
+    protected void onPause() {
+        super.onPause();
 
+        // Creating a shared pref object
+        // with a file name "MySharedPref"
+        // in private mode
+        SharedPreferences sharedPreferences = getSharedPreferences("MySharedPref", MODE_PRIVATE);
+        SharedPreferences.Editor myEdit = sharedPreferences.edit();
+
+        // write all the data entered by the user in SharedPreference and apply
+        myEdit.putString("token", token);
+        myEdit.apply();
+    }
+
+    @Override
+    protected void onResume() {
+        super.onResume();
+
+        // Fetching the stored data
+        // from the SharedPreference
+        SharedPreferences sh = getSharedPreferences("MySharedPref", MODE_PRIVATE);
+        token = sh.getString("token", "");
+    }
 }

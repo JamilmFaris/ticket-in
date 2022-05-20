@@ -19,6 +19,7 @@
         android:layout_marginEnd="30dp"
 
         android:hint="@string/enter_your_first_name"
+        android:singleLine="true"
 
         />
 
@@ -31,11 +32,13 @@
         app:layout_constraintTop_toBottomOf="@+id/passenger_firstname"
         app:layout_constraintEnd_toEndOf="parent"
 
+
         android:layout_marginTop="10dp"
         android:layout_marginStart="30dp"
         android:layout_marginEnd="30dp"
 
         android:hint="@string/enter_your_last_name"
+        android:singleLine="true"
 
         />
     <EditText
@@ -52,6 +55,7 @@
         android:layout_marginEnd="30dp"
 
         android:hint="@string/enter_your_phone_number"
+        android:singleLine="true"
 
         />
     <EditText
@@ -70,15 +74,37 @@
         android:inputType="textPassword"
 
         android:hint="@string/enter_your_password"
+        android:singleLine="true"
 
         />
+
+    <EditText
+        android:id="@+id/passenger_password_confirmation"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toBottomOf="@id/passenger_password"
+        app:layout_constraintEnd_toEndOf="parent"
+
+        android:layout_marginTop="10dp"
+        android:layout_marginStart="30dp"
+        android:layout_marginEnd="30dp"
+
+        android:inputType="textPassword"
+
+        android:hint="@string/enter_your_password"
+        android:singleLine="true"
+
+        />
+
     <Button
         android:id="@+id/signup"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
 
         app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toBottomOf="@+id/passenger_password"
+        app:layout_constraintTop_toBottomOf="@+id/passenger_password_confirmation"
         app:layout_constraintEnd_toEndOf="parent"
 
         android:layout_marginTop="20dp"

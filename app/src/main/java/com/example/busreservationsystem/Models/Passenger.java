@@ -1,21 +1,17 @@
 package com.example.busreservationsystem.Models;
 
-public class Passenger {
-    private static int nxtId = 0;
-    private int id;
-    String firstName, lastName, phoneNumber, password;
+import java.io.Serializable;
 
-    public Passenger(String firstName, String lastName, String phoneNumber, String password) {
-        id = ++nxtId;
+public class Passenger implements Serializable {
+    String firstName, lastName, phoneNumber;
+     String token;
+
+    public Passenger(String firstName, String lastName, String phoneNumber) {
         this.firstName = firstName;
         this.lastName = lastName;
         this.phoneNumber = phoneNumber;
-        this.password = password;
     }
 
-    public int getId() {
-        return id;
-    }
 
     public String getFirstName() {
         return firstName;
@@ -29,8 +25,13 @@ public class Passenger {
         return phoneNumber;
     }
 
-    public String getPassword() {
-        return password;
+
+    public String getToken() {
+        return token;
+    }
+
+    public void setToken(String token) {
+        this.token = token;
     }
 
     public void setFirstName(String firstName) {
@@ -43,9 +44,5 @@ public class Passenger {
 
     public void setPhoneNumber(String phoneNumber) {
         this.phoneNumber = phoneNumber;
-    }
-
-    public void setPassword(String password) {
-        this.password = password;
     }
 }
