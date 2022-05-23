@@ -35,6 +35,7 @@ import java.util.Map;
 
 public class Login extends AppCompatActivity {
 
+    String TAG = "login";
     EditText phoneNumber;
     EditText password;
     Button login;
@@ -48,8 +49,7 @@ public class Login extends AppCompatActivity {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_login);
         /// initialize
-        // TODO : change the url
-        url = "http://192.168.43.239/ticket-in-backend/public/api/v1/passengers/login";
+        url = "http://192.168.1.102/ticket-in-backend/public/api/v1/passengers/login";
         queue = Volley.newRequestQueue(this);
         phoneNumber = findViewById(R.id.passenger_phonenumber_login);
         password = findViewById(R.id.passenger_password_login);
@@ -89,12 +89,17 @@ public class Login extends AppCompatActivity {
                     public void onResponse(JSONObject response) {
                         Toast.makeText(getApplicationContext(), "Logged in successfully"
                                 , Toast.LENGTH_SHORT).show();
+
                         Passenger passenger ;
                         try {
-                            passenger = new Passenger(response.getString("first_name")
-                                    , response.getString("last_name")
-                                    , response.getString("phone_number"));
+                            JSONObject passengerObject = response.getJSONObject("passenger");
+                            passenger = new Passenger(passengerObject.getInt("id")
+                                    , passengerObject.getString("first_name")
+                                    , passengerObject.getString("last_name")
+                                    , passengerObject.getString("phone_number"));
+                            String token = response.getString("token");
                             intent.putExtra("passenger", passenger);
+                            intent.putExtra("token", token);
                             startActivity(intent);
                         } catch (JSONException e) {
                             Toast.makeText(Login.this, "a problem occured"

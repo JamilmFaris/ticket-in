@@ -8,4 +8,10 @@
     <string name="login">login</string>
     <string name="booked">Booked</string>
     <string name="company_show">\"company : \"</string>
+    <string name="filter_by">Filter by:</string>
+    <string name="company_name">company</string>
+    <string name="source_city_name">source city</string>
+    <string name="destination_city_name">destination city</string>
+    <string name="trip_is_cancelled">trip is cancelled</string>
+    <string name="go_to_profile">go to profile</string>
 </resources>

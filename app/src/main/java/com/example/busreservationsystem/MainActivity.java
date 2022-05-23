@@ -34,7 +34,8 @@ public class MainActivity extends AppCompatActivity {
     public static String SHARED_PREFS = "sharedPrefs";
     String url;
     public static Button login, signup;
-    //TODO : remove token value
+
+
     public static String token = "";
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -68,8 +69,6 @@ public class MainActivity extends AppCompatActivity {
                 startActivity(goSignup);
             }
         });
-
-        //startActivity(new Intent(MainActivity.this, Trips.class));
 
     }
     @Override

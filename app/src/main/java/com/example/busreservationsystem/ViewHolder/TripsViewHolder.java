@@ -24,13 +24,15 @@ public class TripsViewHolder extends RecyclerView.ViewHolder {
         was_booked = itemView.findViewById(R.id.was_booked);
     }
     public void bind(Trip trip){
-        //TODO : add resources
         companyName.setText("company : " + trip.companyName);
-        fromTo.setText("from : " + trip.source + " to " + trip.destination );
-        startAt.setText("start at : " + trip.startAt);
+        fromTo.setText("from " + trip.sourceName + " to " + trip.destinationName );
+        startAt.setText("start at : " + trip.getStartAt());
         price.setText("price : " + trip.price);
         if(trip.was_booked){
             was_booked.setVisibility(View.VISIBLE);
+        }
+        else{
+            was_booked.setVisibility(View.GONE);
         }
     }
 }

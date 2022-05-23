@@ -82,7 +82,7 @@
             app:layout_constraintEnd_toEndOf="parent"
             app:layout_constraintBottom_toBottomOf="parent"
 
-            android:visibility="visible"
+            android:visibility="gone"
             android:text="@string/booked"
             />
     </androidx.constraintlayout.widget.ConstraintLayout>

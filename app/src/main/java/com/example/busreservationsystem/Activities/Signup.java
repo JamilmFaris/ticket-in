@@ -6,6 +6,7 @@ import androidx.appcompat.app.AppCompatActivity;
 import android.content.Intent;
 import android.content.SharedPreferences;
 import android.os.Bundle;
+import android.util.Log;
 import android.view.View;
 import android.widget.Button;
 import android.widget.EditText;
@@ -32,6 +33,7 @@ import java.util.HashMap;
 import java.util.Map;
 
 public class Signup extends AppCompatActivity {
+    String TAG = "signup";
     EditText firstName;
     EditText lastName;
     EditText phoneNumber;
@@ -41,14 +43,14 @@ public class Signup extends AppCompatActivity {
     RequestQueue queue;
     String url;
     Passenger passenger;
+    Intent intent;
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_signup);
         queue = Volley.newRequestQueue(this);
-        // TODO : change the url
-        url = "http://192.168.43.239/ticket-in-backend/public/api/v1/passengers/signup";
-        Intent intent = new Intent(this, Trips.class);
+        url = "http://192.168.1.102/ticket-in-backend/public/api/v1/passengers/signup";
+        intent = new Intent(this, Trips.class);
 
         firstName = findViewById(R.id.passenger_firstname);
         lastName = findViewById(R.id.passenger_lastname);
@@ -60,17 +62,21 @@ public class Signup extends AppCompatActivity {
         signup.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
-                passenger = new Passenger(firstName.getText().toString(), lastName.getText().toString()
-                        , phoneNumber.getText().toString());
 
 
                 if(firstName.getText().toString().isEmpty() || lastName.getText().toString().isEmpty() ||
                 phoneNumber.getText().toString().isEmpty() || password.getText().toString().isEmpty() ||
                 passwordConfiramtion.getText().toString().isEmpty() ){
-                    Toast.makeText(getApplicationContext(), "Enter some data", Toast.LENGTH_SHORT).show();
-                }
+                    Toast.makeText(getApplicationContext(), "Enter missing data", Toast.LENGTH_SHORT).show();
+                }/*
                 else if(password.getText().toString().length() < 8){
                     Toast.makeText(getApplicationContext(), "password is too short", Toast.LENGTH_SHORT).show();
+                }
+                */
+                else if(phoneNumber.getText().toString().length() != 10){
+                    Toast.makeText(getApplicationContext()
+                            , "phone number must be 10 digits"
+                            , Toast.LENGTH_SHORT).show();
                 }
                 else if(!password.getText().toString().equals(passwordConfiramtion.getText().toString())){
                     Toast.makeText(getApplicationContext()
@@ -78,10 +84,7 @@ public class Signup extends AppCompatActivity {
                             , Toast.LENGTH_SHORT).show();
                 }
                 else{
-                    postPassenger(passenger);
-                    intent.putExtra("passenger", passenger);
-                    //todo : remove comment
-                    //startActivity(intent);
+                    postPassenger();
                 }
             }
         });
@@ -89,20 +92,12 @@ public class Signup extends AppCompatActivity {
     }
 
 
-    public void postPassenger(Passenger passenger){
-        /*HashMap<String, String> params = new HashMap<>();
-        params.put("first_name", "forbidding");
-        params.put("last_name", "sidebands");
-        params.put("phone_number", "0932753331");
-        params.put("password", "jamiljamil");
-        params.put("password_confirmation", "jamiljamil");*/
-
-
+    public void postPassenger(){
         JSONObject params = new JSONObject();
         try {
-            params.put("first_name", passenger.getFirstName());
-            params.put("last_name", passenger.getLastName());
-            params.put("phone_number", passenger.getPhoneNumber());
+            params.put("first_name", firstName.getText().toString());
+            params.put("last_name", lastName.getText().toString());
+            params.put("phone_number", phoneNumber.getText().toString());
             params.put("password", password.getText().toString());
             params.put("password_confirmation", passwordConfiramtion.getText().toString());
         } catch (JSONException e) {
@@ -116,36 +111,38 @@ public class Signup extends AppCompatActivity {
                     public void onResponse(JSONObject response) {
                         Toast.makeText(getApplicationContext(), "Registered"
                                 , Toast.LENGTH_SHORT).show();
-                        try {
-                            //todo : remove
-                            Toast.makeText(getApplicationContext()
-                                    , response.getString("token")
-                                    , Toast.LENGTH_SHORT).show();
-                        } catch (JSONException e) {
-                            e.printStackTrace();
-                        }
                         String curToken = null;
+
                         try {
+                            JSONObject passengerObject = response.getJSONObject("passenger");
+                            passenger = new Passenger(
+                                    passengerObject.getInt("id"),
+                                    passengerObject.getString("first_name"),
+                                    passengerObject.getString("last_name"),
+                                    passengerObject.getString("phone_number")
+                            );
                             curToken = response.getString("token");
+                            intent.putExtra("passenger", passenger);
+                            intent.putExtra("token", curToken);
+                            startActivity(intent);
                         } catch (JSONException e) {
                             e.printStackTrace();
-                            Toast.makeText(getApplicationContext(), "json " + e.toString()
-                                    , Toast.LENGTH_SHORT).show();
+                            Log.d(TAG, "onResponse: json" + e);
                         }
-                        passenger.setToken(curToken);
-                        MainActivity.token = curToken;
-                        Intent intent = new Intent(Signup.this, Trips.class);
-                        intent.putExtra("passenger", passenger);
-                        startActivity(intent);
                     }
                 },
                 new Response.ErrorListener() {
                     @Override
                     public void onErrorResponse(VolleyError error) {
-                        Toast.makeText(getApplicationContext(), "Problem " + error.toString()
-                                , Toast.LENGTH_SHORT).show();
+                        if(error instanceof AuthFailureError){
+                            //token is not valid
+                            MainActivity.token = "";
+                            startActivity(new Intent(Signup.this, MainActivity.class));
+                        }
+                        Toast.makeText(Signup.this
+                                ,error.toString(), Toast.LENGTH_SHORT).show();
                     }
-                }){    //this is the part, that adds the header to the request
+                }){
             @Override
             public Map<String, String> getHeaders() {
                 Map<String, String> headers = new HashMap<String, String>();
@@ -155,11 +152,5 @@ public class Signup extends AppCompatActivity {
             }
         };
         queue.add(jsonObjectRequest);
-        // TODO : try the shared preferences process
-        /*SharedPreferences sharedPreferences = getSharedPreferences(MainActivity.SHARED_PREFS, MODE_PRIVATE);
-        Toast.makeText(this,
-                "phone number is " + sharedPreferences.getString(Login.PHONENUMBER, "")
-                , Toast.LENGTH_LONG).show();*/
-        ///End of to do
     }
 }
