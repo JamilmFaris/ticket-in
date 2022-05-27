@@ -48,4 +48,12 @@ public class TripsAdapter extends RecyclerView.Adapter<TripsViewHolder> {
         this.trips.addAll(trips);
         notifyDataSetChanged();
     }
+    public void addItemsToExisted(ArrayList<Trip> trips){//needs to be tested {habid}
+        int curSize = getItemCount();
+        this.trips.addAll(trips);
+        int afterSize = trips.size();
+        for(int i = curSize;i <afterSize;i++){
+            notifyItemChanged(i);
+        }
+    }
 }

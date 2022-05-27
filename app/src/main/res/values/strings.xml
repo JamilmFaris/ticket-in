@@ -14,4 +14,5 @@
     <string name="destination_city_name">destination city</string>
     <string name="trip_is_cancelled">trip is cancelled</string>
     <string name="go_to_profile">go to profile</string>
+    <string name="edit">edit</string>
 </resources>

@@ -20,6 +20,8 @@ import com.android.volley.VolleyError;
 import com.android.volley.toolbox.JsonArrayRequest;
 import com.android.volley.toolbox.JsonObjectRequest;
 import com.android.volley.toolbox.Volley;
+import com.example.busreservationsystem.Helper.Helper;
+import com.example.busreservationsystem.Helper.Url;
 import com.example.busreservationsystem.MainActivity;
 import com.example.busreservationsystem.Models.Passenger;
 import com.example.busreservationsystem.Models.Trip;
@@ -49,7 +51,7 @@ public class Login extends AppCompatActivity {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_login);
         /// initialize
-        url = "http://192.168.1.102/ticket-in-backend/public/api/v1/passengers/login";
+        url = Url.getLoginUrl();
         queue = Volley.newRequestQueue(this);
         phoneNumber = findViewById(R.id.passenger_phonenumber_login);
         password = findViewById(R.id.passenger_password_login);
@@ -63,6 +65,11 @@ public class Login extends AppCompatActivity {
                 if(phoneNumber.getText().toString().isEmpty() ||
                     password.getText().toString().isEmpty()){
                     Toast.makeText(getApplicationContext(), "Enter some data"
+                            , Toast.LENGTH_SHORT).show();
+                }
+                else if(!Helper.isPhoneNumber( phoneNumber.getText().toString() ).isEmpty()){
+                    Toast.makeText(getApplicationContext()
+                            , Helper.isPhoneNumber( phoneNumber.getText().toString() )
                             , Toast.LENGTH_SHORT).show();
                 }
                 else{
@@ -111,10 +118,10 @@ public class Login extends AppCompatActivity {
                 new Response.ErrorListener() {
                     @Override
                     public void onErrorResponse(VolleyError error) {
-
-                        Toast.makeText(getApplicationContext(), "Problem " + error.toString()
-                                , Toast.LENGTH_SHORT).show();
-                        startActivity(new Intent(Login.this, MainActivity.class));
+                        String message = Helper.onErrorResponse(error);
+                        if(!message.isEmpty()){
+                            Toast.makeText(Login.this, message, Toast.LENGTH_SHORT).show();
+                        }
                     }
                 }){    //this is the part, that adds the header to the request
             @Override
@@ -126,17 +133,5 @@ public class Login extends AppCompatActivity {
             }
         };
         queue.add(jsonObjectRequest);
-    }
-
-    public void saveLoggedStatus(){
-        /*SharedPreferences sharedPreferences = getSharedPreferences(MainActivity.SHARED_PREFS, MODE_PRIVATE);
-        SharedPreferences.Editor editor = sharedPreferences.edit();
-        editor.putString(PHONENUMBER, phoneNumber.getText().toString());
-        editor.putString(PASSWORD, password.getText().toString());*/
-    }
-    public void loadLoggedStatus(){
-        /*SharedPreferences sharedPreferences = getSharedPreferences(MainActivity.SHARED_PREFS, MODE_PRIVATE);
-        phoneNumber.setText( sharedPreferences.getString(PHONENUMBER, "") );
-        password.setText(sharedPreferences.getString(PASSWORD, ""));*/
     }
 }

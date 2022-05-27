@@ -4,6 +4,8 @@ import androidx.appcompat.app.AppCompatActivity;
 import androidx.recyclerview.widget.GridLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
 
+import android.app.AlarmManager;
+import android.app.PendingIntent;
 import android.content.Context;
 import android.content.Intent;
 import android.content.SharedPreferences;
@@ -23,14 +25,20 @@ import com.example.busreservationsystem.Activities.Signup;
 import com.example.busreservationsystem.Activities.Trips;
 import com.example.busreservationsystem.Adapter.TripsAdapter;
 import com.example.busreservationsystem.ClickListener.ClickListener;
+import com.example.busreservationsystem.Helper.Helper;
 import com.example.busreservationsystem.Models.Trip;
+import com.example.busreservationsystem.Notification.Notification;
 
 import org.json.JSONArray;
 import org.json.JSONException;
 
 import java.util.ArrayList;
+import java.util.Calendar;
+import java.util.Date;
+import java.util.GregorianCalendar;
 
 public class MainActivity extends AppCompatActivity {
+    //todo save token
     public static String SHARED_PREFS = "sharedPrefs";
     String url;
     public static Button login, signup;
@@ -95,4 +103,6 @@ public class MainActivity extends AppCompatActivity {
         SharedPreferences sh = getSharedPreferences("MySharedPref", MODE_PRIVATE);
         token = sh.getString("token", "");
     }
+
+
 }

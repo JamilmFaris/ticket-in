@@ -20,6 +20,8 @@ import com.android.volley.VolleyError;
 import com.android.volley.toolbox.JsonArrayRequest;
 import com.android.volley.toolbox.JsonObjectRequest;
 import com.android.volley.toolbox.Volley;
+import com.example.busreservationsystem.Helper.Helper;
+import com.example.busreservationsystem.Helper.Url;
 import com.example.busreservationsystem.MainActivity;
 import com.example.busreservationsystem.Models.Passenger;
 import com.example.busreservationsystem.R;
@@ -28,6 +30,7 @@ import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;
 
+import java.io.UnsupportedEncodingException;
 import java.nio.charset.StandardCharsets;
 import java.util.HashMap;
 import java.util.Map;
@@ -49,7 +52,7 @@ public class Signup extends AppCompatActivity {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_signup);
         queue = Volley.newRequestQueue(this);
-        url = "http://192.168.1.102/ticket-in-backend/public/api/v1/passengers/signup";
+        url = Url.getSignupUrl();
         intent = new Intent(this, Trips.class);
 
         firstName = findViewById(R.id.passenger_firstname);
@@ -68,14 +71,13 @@ public class Signup extends AppCompatActivity {
                 phoneNumber.getText().toString().isEmpty() || password.getText().toString().isEmpty() ||
                 passwordConfiramtion.getText().toString().isEmpty() ){
                     Toast.makeText(getApplicationContext(), "Enter missing data", Toast.LENGTH_SHORT).show();
-                }/*
+                }
                 else if(password.getText().toString().length() < 8){
                     Toast.makeText(getApplicationContext(), "password is too short", Toast.LENGTH_SHORT).show();
                 }
-                */
-                else if(phoneNumber.getText().toString().length() != 10){
+                else if(!Helper.isPhoneNumber( phoneNumber.getText().toString() ).isEmpty()){
                     Toast.makeText(getApplicationContext()
-                            , "phone number must be 10 digits"
+                            , Helper.isPhoneNumber( phoneNumber.getText().toString() )
                             , Toast.LENGTH_SHORT).show();
                 }
                 else if(!password.getText().toString().equals(passwordConfiramtion.getText().toString())){
@@ -91,7 +93,7 @@ public class Signup extends AppCompatActivity {
 
     }
 
-
+    ///////////////////////////function//////////////////////////////////////////////////////
     public void postPassenger(){
         JSONObject params = new JSONObject();
         try {
@@ -134,13 +136,10 @@ public class Signup extends AppCompatActivity {
                 new Response.ErrorListener() {
                     @Override
                     public void onErrorResponse(VolleyError error) {
-                        if(error instanceof AuthFailureError){
-                            //token is not valid
-                            MainActivity.token = "";
-                            startActivity(new Intent(Signup.this, MainActivity.class));
+                        String message = Helper.onErrorResponse(error);
+                        if(!message.isEmpty()){
+                            Toast.makeText(Signup.this, message, Toast.LENGTH_SHORT).show();
                         }
-                        Toast.makeText(Signup.this
-                                ,error.toString(), Toast.LENGTH_SHORT).show();
                     }
                 }){
             @Override

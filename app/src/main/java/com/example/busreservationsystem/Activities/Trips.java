@@ -2,47 +2,40 @@ package com.example.busreservationsystem.Activities;
 
 import androidx.appcompat.app.AlertDialog;
 import androidx.appcompat.app.AppCompatActivity;
+import androidx.core.widget.NestedScrollView;
 import androidx.recyclerview.widget.GridLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
 
+import android.app.AlarmManager;
+import android.app.PendingIntent;
 import android.content.DialogInterface;
 import android.content.Intent;
 import android.graphics.Color;
 import android.os.Bundle;
 import android.text.Editable;
 import android.text.TextWatcher;
-import android.util.Log;
-import android.view.KeyEvent;
 import android.view.View;
 import android.widget.AdapterView;
 import android.widget.ArrayAdapter;
 import android.widget.AutoCompleteTextView;
 import android.widget.Button;
-import android.widget.EditText;
-import android.widget.TextView;
 import android.widget.Toast;
 
-import com.android.volley.AuthFailureError;
-import com.android.volley.NetworkError;
-import com.android.volley.NetworkResponse;
-import com.android.volley.NoConnectionError;
-import com.android.volley.ParseError;
 import com.android.volley.Request;
 import com.android.volley.RequestQueue;
 import com.android.volley.Response;
-import com.android.volley.ServerError;
-import com.android.volley.TimeoutError;
 import com.android.volley.VolleyError;
-import com.android.volley.toolbox.JsonArrayRequest;
 import com.android.volley.toolbox.JsonObjectRequest;
-import com.android.volley.toolbox.JsonRequest;
 import com.android.volley.toolbox.StringRequest;
 import com.android.volley.toolbox.Volley;
 import com.example.busreservationsystem.Adapter.TripsAdapter;
 import com.example.busreservationsystem.ClickListener.ClickListener;
+import com.example.busreservationsystem.Helper.Helper;
+import com.example.busreservationsystem.Helper.Url;
 import com.example.busreservationsystem.MainActivity;
 import com.example.busreservationsystem.Models.Passenger;
 import com.example.busreservationsystem.Models.Trip;
+import com.example.busreservationsystem.Notification.Notification;
 import com.example.busreservationsystem.R;
 
 import org.json.JSONArray;
@@ -50,12 +43,14 @@ import org.json.JSONException;
 import org.json.JSONObject;
 
 import java.util.ArrayList;
+import java.util.Calendar;
 import java.util.HashMap;
 import java.util.Locale;
 import java.util.Map;
 
 public class Trips extends AppCompatActivity {
     String TAG = "trips";
+    public static int notificationId = 1;
 
     TripsAdapter tripsAdapter;
     RecyclerView tripsView;
@@ -79,6 +74,10 @@ public class Trips extends AppCompatActivity {
     String selectedSourceSlug = "";
     String selectedDestinationSlug = "";
     Button goToProfile ;
+    NestedScrollView nestedScrollView;
+    int tripsPage = 0;
+
+
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -86,10 +85,10 @@ public class Trips extends AppCompatActivity {
         setContentView(R.layout.activity_trips);
         // init
         tripsView = findViewById(R.id.trips);
+        nestedScrollView = findViewById(R.id.nested_scroll_view);
 
-        getCompaniesHandleUrl = "http://192.168.1.102/ticket-in-backend/public/api/v1/companies";
-        getCitiesSlugUrl = "http://192.168.1.102/ticket-in-backend/public/api/v1/cities";
-        cancelTripUrl = "";
+        getCompaniesHandleUrl = Url.getGetCompaniesHandleUrl();
+        getCitiesSlugUrl = Url.getGetCitiesSlugUrl();
         companyFilter = findViewById(R.id.company_filter);
         sourceFilter = findViewById(R.id.source_filter);
         destinationFilter = findViewById(R.id.destination_filter);
@@ -119,7 +118,7 @@ public class Trips extends AppCompatActivity {
         ///filter
         companyFilterAdapter = new ArrayAdapter<>
                 (this, android.R.layout.select_dialog_item, companies);
-        companyFilter.setThreshold(1);
+        companyFilter.setThreshold(0);
         companyFilter.setTextColor(Color.RED);
         companyFilter.setAdapter(companyFilterAdapter);
 
@@ -148,6 +147,12 @@ public class Trips extends AppCompatActivity {
                     selectedCompanyHandle = "";
                     getTrips(selectedCompanyHandle, selectedSourceSlug, selectedDestinationSlug);
                 }
+            }
+        });
+        companyFilter.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View view) {
+                companyFilter.showDropDown();
             }
         });
 
@@ -187,7 +192,12 @@ public class Trips extends AppCompatActivity {
 
             }
         });
-
+        sourceFilter.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View view) {
+                sourceFilter.showDropDown();
+            }
+        });
 
 
         destinationFilterAdapter = new ArrayAdapter<>
@@ -223,6 +233,12 @@ public class Trips extends AppCompatActivity {
 
             }
         });
+        destinationFilter.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View view) {
+                destinationFilter.showDropDown();
+            }
+        });
         ///filter
 
 
@@ -253,18 +269,39 @@ public class Trips extends AppCompatActivity {
             }
         });
 
+        //nestedScrollView
+        nestedScrollView.setOnScrollChangeListener(new NestedScrollView.OnScrollChangeListener() {
+            @Override
+            public void onScrollChange(NestedScrollView v, int scrollX, int scrollY, int oldScrollX, int oldScrollY) {
+                // on scroll change we are checking when users scroll as bottom.
+                if (scrollY == v.getChildAt(0).getMeasuredHeight() - v.getMeasuredHeight()) {
+                    // in this method we are incrementing page number,
+                    // making progress bar visible and calling get data method.
+                    tripsPage++;
+                    getTripsPagination(tripsPage, selectedCompanyHandle,
+                            selectedSourceSlug, selectedDestinationSlug);
+                }
+            }
+        });
+
+
+
     }
 
 
 
     ///////////////////functions /////////////////////
+
     public void getTrips(String companyHandleParam
+            , String sourceSlugParam, String destinationSlugParam){
+        tripsPage = 0;
+        getTripsPagination(0, companyHandleParam, sourceSlugParam, destinationSlugParam);
+    }
+
+    public void getTripsPagination(int page, String companyHandleParam
             , String sourceSlugParam, String destinationSlugParam){// parameters are handle and slugs
 
-        getTripsUrl = "http://192.168.1.102/ticket-in-backend/public/api/v1/trips";
-        getTripsUrl += "?company=" + companyHandleParam;
-        getTripsUrl += "&source=" + sourceSlugParam;
-        getTripsUrl += "&destination=" + destinationSlugParam;
+        getTripsUrl = Url.getGetTripsUrl(companyHandleParam, sourceSlugParam, destinationSlugParam);
 
         JsonObjectRequest jsonObjectRequest = new JsonObjectRequest(Request.Method.GET
                 , getTripsUrl, null,
@@ -298,9 +335,8 @@ public class Trips extends AppCompatActivity {
 
                                 boolean was_booked = curTrip.getBoolean("was_booked");
 
-                                Trip cur = new Trip(id, companyName, sourceName ,  destinationName,
+                                Trip cur = new Trip(id, companyName, sourceName ,  destinationName,startAt,
                                          price, was_booked);
-                                cur.setStartAt(startAt);
                                 trips.add(cur);
                         }
                         tripsAdapter.addItems(trips);
@@ -309,13 +345,21 @@ public class Trips extends AppCompatActivity {
                     }
                 },
                 error -> {
-                    if(error instanceof AuthFailureError){
-                        //token is not valid
-                        MainActivity.token = "";
-                        startActivity(new Intent(Trips.this, MainActivity.class));
+                    String authResponseMessage = Helper.onAuthFailureError(error);
+                    if(!authResponseMessage.isEmpty()){
+                        Toast.makeText(this,
+                                authResponseMessage
+                                , Toast.LENGTH_SHORT).show();
+                        startActivity(new Intent(this, MainActivity.class));
                     }
-                    Toast.makeText(Trips.this
-                            ,error.toString(), Toast.LENGTH_SHORT).show();
+                    else{
+                        String responseMessage = Helper.onErrorResponse(error);
+                        if(!responseMessage.isEmpty()){
+                            Toast.makeText(this,
+                                    responseMessage
+                                    , Toast.LENGTH_LONG).show();
+                        }
+                    }
                 }){
             @Override
             public Map<String, String> getHeaders() {
@@ -337,9 +381,7 @@ public class Trips extends AppCompatActivity {
         builder.setPositiveButton("Yes", new DialogInterface.OnClickListener() {
             @Override
             public void onClick(DialogInterface dialogInterface, int i) {
-                bookTripUrl = "http://192.168.1.102/ticket-in-backend/public/api/v1/trips";
-                bookTripUrl += "/" + trips.get(index).id;
-                bookTripUrl += "/book";
+                bookTripUrl = Url.getBookTripUrl(trips.get(index).id);
 
 
                 ///
@@ -351,20 +393,40 @@ public class Trips extends AppCompatActivity {
                                 Toast.makeText(Trips.this,
                                         "the trip is booked", Toast.LENGTH_SHORT).show();
                                 trips.get(index).was_booked = true;
+
+                                // TODO change notificationId
+                                Trip curTrip = trips.get(index);
+                                Calendar cal = Calendar.getInstance();
+                                cal.set(Calendar.YEAR, curTrip.year);
+                                cal.set(Calendar.MONTH, curTrip.month );
+                                cal.set(Calendar.DAY_OF_MONTH, curTrip.day );
+                                cal.set(Calendar.HOUR, curTrip.hour);
+                                cal.set(Calendar.MINUTE, curTrip.min);
+                                cal.set(Calendar.SECOND, curTrip.sec);
+                                Notification.setAlert(Trips.this, cal
+                                        , notificationId++, "trip notification",
+                                        "you have a trip after 30 minutes");
                                 tripsAdapter.notifyItemChanged(index);
                             }
                         }
                         , new Response.ErrorListener() {
                     @Override
                     public void onErrorResponse(VolleyError error) {
-                        if(error instanceof AuthFailureError){
-                            //token is not valid
-                            MainActivity.token = "";
+                        String authResponseMessage = Helper.onAuthFailureError(error);
+                        if(!authResponseMessage.isEmpty()){
+                            Toast.makeText(Trips.this,
+                                    authResponseMessage
+                                    , Toast.LENGTH_SHORT).show();
                             startActivity(new Intent(Trips.this, MainActivity.class));
                         }
-                        Toast.makeText(Trips.this,
-                                "the trip is not booked error is " + error.toString()
-                                , Toast.LENGTH_LONG).show();
+                        else{
+                            String responseMessage = Helper.onErrorResponse(error);
+                            if(!responseMessage.isEmpty()){
+                                Toast.makeText(Trips.this,
+                                        responseMessage
+                                        , Toast.LENGTH_LONG).show();
+                            }
+                        }
                     }
                 }){
                     @Override
@@ -401,9 +463,7 @@ public class Trips extends AppCompatActivity {
         builder.setPositiveButton("Yes", new DialogInterface.OnClickListener() {
             @Override
             public void onClick(DialogInterface dialogInterface, int i) {
-                cancelTripUrl = "http://192.168.1.102/ticket-in-backend/public/api/v1/trips";
-                cancelTripUrl += "/" + trips.get(index).id;
-                cancelTripUrl += "/cancelBook";
+                cancelTripUrl = Url.getCancelTripUrl(trips.get(index).id);
 
                 StringRequest bookTripArrayRequest = new StringRequest(Request.Method.POST
                         , cancelTripUrl,
@@ -419,13 +479,20 @@ public class Trips extends AppCompatActivity {
                         new Response.ErrorListener() {
                             @Override
                             public void onErrorResponse(VolleyError error) {
-                                Toast.makeText(Trips.this,
-                                        "the trip is not cancelled", Toast.LENGTH_SHORT).show();
-                                Log.d(TAG, "onErrorResponse: " + error.toString());
-                                if(error instanceof AuthFailureError){
-                                    //token is not valid
-                                    MainActivity.token = "";
+                                String authResponseMessage = Helper.onAuthFailureError(error);
+                                if(!authResponseMessage.isEmpty()){
+                                    Toast.makeText(Trips.this,
+                                            authResponseMessage
+                                            , Toast.LENGTH_SHORT).show();
                                     startActivity(new Intent(Trips.this, MainActivity.class));
+                                }
+                                else{
+                                    String responseMessage = Helper.onErrorResponse(error);
+                                    if(!responseMessage.isEmpty()){
+                                        Toast.makeText(Trips.this,
+                                                responseMessage
+                                                , Toast.LENGTH_LONG).show();
+                                    }
                                 }
                             }
                         }){
@@ -452,7 +519,8 @@ public class Trips extends AppCompatActivity {
     }
 
     public void getCitiesSlug(){// gets cities and initialize citySlugMap
-        JsonObjectRequest getCitiesSlugRequest = new JsonObjectRequest(Request.Method.GET, getCitiesSlugUrl, null,
+        JsonObjectRequest getCitiesSlugRequest = new JsonObjectRequest(Request.Method.GET
+                , getCitiesSlugUrl, null,
                 new Response.Listener<JSONObject>() {
                     @Override
                     public void onResponse(JSONObject response) {
@@ -477,10 +545,20 @@ public class Trips extends AppCompatActivity {
                 new Response.ErrorListener() {
                     @Override
                     public void onErrorResponse(VolleyError error) {
-                        if(error instanceof AuthFailureError){
-                            //token is not valid
-                            MainActivity.token = "";
+                        String authResponseMessage = Helper.onAuthFailureError(error);
+                        if(!authResponseMessage.isEmpty()){
+                            Toast.makeText(Trips.this,
+                                    authResponseMessage
+                                    , Toast.LENGTH_SHORT).show();
                             startActivity(new Intent(Trips.this, MainActivity.class));
+                        }
+                        else{
+                            String responseMessage = Helper.onErrorResponse(error);
+                            if(!responseMessage.isEmpty()){
+                                Toast.makeText(Trips.this,
+                                        responseMessage
+                                        , Toast.LENGTH_LONG).show();
+                            }
                         }
                     }
                 }){
@@ -522,13 +600,21 @@ public class Trips extends AppCompatActivity {
                 new Response.ErrorListener() {
                     @Override
                     public void onErrorResponse(VolleyError error) {
-                        if(error instanceof AuthFailureError){
-                            //token is not valid
-                            MainActivity.token = "";
+                        String authResponseMessage = Helper.onAuthFailureError(error);
+                        if(!authResponseMessage.isEmpty()){
+                            Toast.makeText(Trips.this,
+                                    authResponseMessage
+                                    , Toast.LENGTH_SHORT).show();
                             startActivity(new Intent(Trips.this, MainActivity.class));
                         }
-                        Toast.makeText(Trips.this
-                                , "can't get companies", Toast.LENGTH_SHORT).show();
+                        else{
+                            String responseMessage = Helper.onErrorResponse(error);
+                            if(!responseMessage.isEmpty()){
+                                Toast.makeText(Trips.this,
+                                        responseMessage
+                                        , Toast.LENGTH_LONG).show();
+                            }
+                        }
                     }
                 }){
             @Override
@@ -549,4 +635,6 @@ public class Trips extends AppCompatActivity {
         MainActivity.token = "";
         startActivity(new Intent(this, MainActivity.class));
     }
+
+
 }

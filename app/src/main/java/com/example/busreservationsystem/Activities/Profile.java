@@ -10,6 +10,7 @@ import android.content.Intent;
 import android.os.Bundle;
 import android.util.Log;
 import android.widget.AbsListView;
+import android.widget.Button;
 import android.widget.TextView;
 import android.widget.Toast;
 
@@ -24,6 +25,8 @@ import com.android.volley.toolbox.StringRequest;
 import com.android.volley.toolbox.Volley;
 import com.example.busreservationsystem.Adapter.TripsAdapter;
 import com.example.busreservationsystem.ClickListener.ClickListener;
+import com.example.busreservationsystem.Helper.Helper;
+import com.example.busreservationsystem.Helper.Url;
 import com.example.busreservationsystem.MainActivity;
 import com.example.busreservationsystem.Models.Passenger;
 import com.example.busreservationsystem.Models.Trip;
@@ -46,10 +49,11 @@ public class Profile extends AppCompatActivity {
     TripsAdapter tripsAdapter ;
     ArrayList<Trip> trips = new ArrayList<>();
     String bookTripUrl;
-    String bookedTripsUrl = "http://192.168.1.102/ticket-in-backend/public/api/v1/passengers";
+    String bookedTripsUrl ;
     String cancelTripUrl = "";
     RequestQueue queue ;
     Passenger passenger;
+    Button editName, editPhoneNumber;
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -85,12 +89,11 @@ public class Profile extends AppCompatActivity {
         phoneNumber.setText(passenger.getPhoneNumber());
 
 
+        //edit profile
 
     }
     public void getBookedTrips(){// /4/trips/upcoming
-        bookedTripsUrl = "http://192.168.1.102/ticket-in-backend/public/api/v1/passengers";
-        bookedTripsUrl += "/" + passenger.getId();
-        bookedTripsUrl += "/trips/upcoming";
+        bookedTripsUrl = Url.getBookedTripUrl(passenger.getId());
         JsonObjectRequest jsonObjectRequest = new JsonObjectRequest(Request.Method.GET
                 , bookedTripsUrl, null,
                 response -> {
@@ -123,9 +126,8 @@ public class Profile extends AppCompatActivity {
 
                             boolean was_booked = curTrip.getBoolean("was_booked");
 
-                            Trip cur = new Trip(id, companyName, sourceName ,  destinationName,
+                            Trip cur = new Trip(id, companyName, sourceName ,  destinationName,startAt,
                                     price, was_booked);
-                            cur.setStartAt(startAt);
                             trips.add(cur);
                         }
                         tripsAdapter.addItems(trips);
@@ -136,13 +138,21 @@ public class Profile extends AppCompatActivity {
                     }
                 },
                 error -> {
-                    if(error instanceof AuthFailureError){
-                        //token is not valid
-                        MainActivity.token = "";
+                    String authResponseMessage = Helper.onAuthFailureError(error);
+                    if(!authResponseMessage.isEmpty()){
+                        Toast.makeText(Profile.this,
+                                        authResponseMessage
+                                , Toast.LENGTH_SHORT).show();
                         startActivity(new Intent(Profile.this, MainActivity.class));
                     }
-                    Toast.makeText(Profile.this
-                            ,error.toString(), Toast.LENGTH_SHORT).show();
+                    else{
+                        String responseMessage = Helper.onErrorResponse(error);
+                        if(!responseMessage.isEmpty()){
+                            Toast.makeText(Profile.this,
+                                    responseMessage
+                                    , Toast.LENGTH_LONG).show();
+                        }
+                    }
                 }){
             @Override
             public Map<String, String> getHeaders() {
@@ -164,9 +174,7 @@ public class Profile extends AppCompatActivity {
         builder.setPositiveButton("Yes", new DialogInterface.OnClickListener() {
             @Override
             public void onClick(DialogInterface dialogInterface, int i) {
-                cancelTripUrl = "http://192.168.1.102/ticket-in-backend/public/api/v1/trips";
-                cancelTripUrl += "/" + trips.get(index).id;
-                cancelTripUrl += "/cancelBook";
+                cancelTripUrl = Url.getCancelTripUrl(trips.get(index).id);
 
                 StringRequest bookTripArrayRequest = new StringRequest(Request.Method.POST
                         , cancelTripUrl,
@@ -182,13 +190,20 @@ public class Profile extends AppCompatActivity {
                         new Response.ErrorListener() {
                             @Override
                             public void onErrorResponse(VolleyError error) {
-                                Toast.makeText(Profile.this,
-                                        "the trip is not cancelled", Toast.LENGTH_SHORT).show();
-                                Log.d(TAG, "onErrorResponse: " + error.toString());
-                                if(error instanceof AuthFailureError){
-                                    //token is not valid
-                                    MainActivity.token = "";
+                                String authResponseMessage = Helper.onAuthFailureError(error);
+                                if(!authResponseMessage.isEmpty()){
+                                    Toast.makeText(Profile.this,
+                                                    authResponseMessage
+                                            , Toast.LENGTH_SHORT).show();
                                     startActivity(new Intent(Profile.this, MainActivity.class));
+                                }
+                                else{
+                                    String responseMessage = Helper.onErrorResponse(error);
+                                    if(!responseMessage.isEmpty()){
+                                        Toast.makeText(Profile.this,
+                                                 responseMessage
+                                                , Toast.LENGTH_LONG).show();
+                                    }
                                 }
                             }
                         }){
@@ -215,7 +230,7 @@ public class Profile extends AppCompatActivity {
     }
 
 
-    public void bookTrip(int index){
+    public void bookTrip(int tripIndex){
         AlertDialog.Builder builder = new AlertDialog.Builder(Profile.this);
         builder.setCancelable(true);
         builder.setTitle("Approve booking");
@@ -223,9 +238,7 @@ public class Profile extends AppCompatActivity {
         builder.setPositiveButton("Yes", new DialogInterface.OnClickListener() {
             @Override
             public void onClick(DialogInterface dialogInterface, int i) {
-                bookTripUrl = "http://192.168.1.102/ticket-in-backend/public/api/v1/trips";
-                bookTripUrl += "/" + trips.get(index).id;
-                bookTripUrl += "/book";
+                bookTripUrl = Url.getBookTripUrl(trips.get(tripIndex).id);
 
 
                 ///
@@ -236,21 +249,29 @@ public class Profile extends AppCompatActivity {
                             public void onResponse(String response) {
                                 Toast.makeText(Profile.this,
                                         "the trip is booked", Toast.LENGTH_SHORT).show();
-                                trips.get(index).was_booked = true;
-                                tripsAdapter.notifyItemChanged(index);
+                                trips.get(tripIndex).was_booked = true;
+                                tripsAdapter.notifyItemChanged(tripIndex);
                             }
                         }
                         , new Response.ErrorListener() {
                     @Override
                     public void onErrorResponse(VolleyError error) {
-                        if(error instanceof AuthFailureError){
-                            //token is not valid
-                            MainActivity.token = "";
+                        String authResponseMessage = Helper.onAuthFailureError(error);
+                        if(!authResponseMessage.isEmpty()){
+                            Toast.makeText(Profile.this,"the trip is not booked " +
+                                    authResponseMessage
+                                    , Toast.LENGTH_SHORT).show();
                             startActivity(new Intent(Profile.this, MainActivity.class));
                         }
-                        Toast.makeText(Profile.this,
-                                "the trip is not booked error is " + error.toString()
-                                , Toast.LENGTH_LONG).show();
+                        else{
+                            String responseMessage = Helper.onErrorResponse(error);
+                            if(!responseMessage.isEmpty()){
+                                Toast.makeText(Profile.this,
+                                        "the trip is not booked error is " + responseMessage
+                                        , Toast.LENGTH_LONG).show();
+                            }
+                        }
+
                     }
                 }){
                     @Override
@@ -278,6 +299,8 @@ public class Profile extends AppCompatActivity {
         AlertDialog alertDialog = builder.create();
         alertDialog.show();
     }
+
+
 
     @Override
     public void onBackPressed() {
