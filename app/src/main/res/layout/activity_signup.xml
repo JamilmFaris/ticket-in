@@ -4,7 +4,8 @@
     xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    tools:context=".Activities.Signup">
+    tools:context=".Activities.Signup"
+    android:background="@drawable/trips_background">
     <EditText
         android:id="@+id/passenger_firstname"
         android:layout_width="match_parent"

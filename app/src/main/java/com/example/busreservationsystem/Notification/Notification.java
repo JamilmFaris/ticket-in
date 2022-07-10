@@ -63,6 +63,8 @@ public class Notification {
         notificationManager.notify(notificationId, builder.build());
 
 
+        //rings when the alarm goes off
+        /*
         // we will use vibrator first
         Vibrator vibrator = (Vibrator) context.getSystemService(context.VIBRATOR_SERVICE);
         vibrator.vibrate(1000);
@@ -76,6 +78,8 @@ public class Notification {
         Toast.makeText(context, alarmUri.toString(), Toast.LENGTH_SHORT).show();
         // play ringtone
         mp.start();
+
+         */
     }
 
     private static void createNotificationChannel(Context context) {

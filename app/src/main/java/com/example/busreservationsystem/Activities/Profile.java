@@ -1,30 +1,31 @@
 package com.example.busreservationsystem.Activities;
 
-import androidx.appcompat.app.AlertDialog;
-import androidx.appcompat.app.AppCompatActivity;
-import androidx.recyclerview.widget.GridLayoutManager;
-import androidx.recyclerview.widget.RecyclerView;
-
 import android.content.DialogInterface;
 import android.content.Intent;
 import android.os.Bundle;
 import android.util.Log;
-import android.widget.AbsListView;
+import android.view.View;
 import android.widget.Button;
+import android.widget.EditText;
 import android.widget.TextView;
 import android.widget.Toast;
 
-import com.android.volley.AuthFailureError;
+import androidx.appcompat.app.AlertDialog;
+import androidx.appcompat.app.AppCompatActivity;
+import androidx.appcompat.widget.Toolbar;
+import androidx.recyclerview.widget.GridLayoutManager;
+import androidx.recyclerview.widget.RecyclerView;
+
 import com.android.volley.Request;
 import com.android.volley.RequestQueue;
 import com.android.volley.Response;
 import com.android.volley.VolleyError;
-import com.android.volley.toolbox.JsonArrayRequest;
 import com.android.volley.toolbox.JsonObjectRequest;
 import com.android.volley.toolbox.StringRequest;
 import com.android.volley.toolbox.Volley;
 import com.example.busreservationsystem.Adapter.TripsAdapter;
 import com.example.busreservationsystem.ClickListener.ClickListener;
+import com.example.busreservationsystem.Helper.DrawerUtil;
 import com.example.busreservationsystem.Helper.Helper;
 import com.example.busreservationsystem.Helper.Url;
 import com.example.busreservationsystem.MainActivity;
@@ -38,13 +39,12 @@ import org.json.JSONObject;
 
 import java.util.ArrayList;
 import java.util.HashMap;
-import java.util.Locale;
 import java.util.Map;
 
 public class Profile extends AppCompatActivity {
     String TAG = "profile";
 
-    TextView name, phoneNumber;
+    TextView firstName, lastName, phoneNumber;
     RecyclerView bookedTripsView;
     TripsAdapter tripsAdapter ;
     ArrayList<Trip> trips = new ArrayList<>();
@@ -53,16 +53,24 @@ public class Profile extends AppCompatActivity {
     String cancelTripUrl = "";
     RequestQueue queue ;
     Passenger passenger;
-    Button editName, editPhoneNumber;
+    Button editProfileButton;
+    Toolbar toolbar;
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_profile);
         //initialize
-        name = findViewById(R.id.name_profile);
+        firstName = findViewById(R.id.first_name_profile);
+        lastName = findViewById(R.id.last_name_profile);
         phoneNumber = findViewById(R.id.phone_number_profile);
         bookedTripsView = findViewById(R.id.booked_trips);
         queue = Volley.newRequestQueue(this);
+        editProfileButton = findViewById(R.id.edit_profile_button);
+        toolbar = findViewById(R.id.toolbar);
+        toolbar.setTitle("");
+        setSupportActionBar(toolbar);
+
+        DrawerUtil.getDrawer(this,toolbar);
 
         //
 
@@ -81,15 +89,22 @@ public class Profile extends AppCompatActivity {
 
         bookedTripsView.setLayoutManager(new GridLayoutManager(getApplicationContext(),
                 1, RecyclerView.VERTICAL, false));
-        passenger =(Passenger) getIntent().getSerializableExtra("passenger");
+        passenger = Helper.loadPassenger(this);
         bookedTripsView.setAdapter(tripsAdapter);
         getBookedTrips();
 
-        name.setText(passenger.getFirstName());
+        firstName.setText(passenger.getFirstName());
+        lastName.setText(passenger.getLastName());
         phoneNumber.setText(passenger.getPhoneNumber());
 
 
         //edit profile
+        editProfileButton.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View view) {
+                editProfile();
+            }
+        });
 
     }
     public void getBookedTrips(){// /4/trips/upcoming
@@ -138,26 +153,13 @@ public class Profile extends AppCompatActivity {
                     }
                 },
                 error -> {
-                    String authResponseMessage = Helper.onAuthFailureError(error);
-                    if(!authResponseMessage.isEmpty()){
-                        Toast.makeText(Profile.this,
-                                        authResponseMessage
-                                , Toast.LENGTH_SHORT).show();
-                        startActivity(new Intent(Profile.this, MainActivity.class));
-                    }
-                    else{
-                        String responseMessage = Helper.onErrorResponse(error);
-                        if(!responseMessage.isEmpty()){
-                            Toast.makeText(Profile.this,
-                                    responseMessage
-                                    , Toast.LENGTH_LONG).show();
-                        }
-                    }
+                    Helper.onAuthFailureError(Profile.this, error);
+
                 }){
             @Override
             public Map<String, String> getHeaders() {
                 Map<String, String> headers = new HashMap<String, String>();
-                headers.put("Authorization", "Bearer " +  getIntent().getStringExtra("token"));
+                headers.put("Authorization", "Bearer " +  Helper.loadToken(Profile.this));
                 headers.put("Content-Type", "application/json");
                 headers.put("Accept", "application/json");
                 return headers;
@@ -190,27 +192,14 @@ public class Profile extends AppCompatActivity {
                         new Response.ErrorListener() {
                             @Override
                             public void onErrorResponse(VolleyError error) {
-                                String authResponseMessage = Helper.onAuthFailureError(error);
-                                if(!authResponseMessage.isEmpty()){
-                                    Toast.makeText(Profile.this,
-                                                    authResponseMessage
-                                            , Toast.LENGTH_SHORT).show();
-                                    startActivity(new Intent(Profile.this, MainActivity.class));
-                                }
-                                else{
-                                    String responseMessage = Helper.onErrorResponse(error);
-                                    if(!responseMessage.isEmpty()){
-                                        Toast.makeText(Profile.this,
-                                                 responseMessage
-                                                , Toast.LENGTH_LONG).show();
-                                    }
-                                }
+                                Helper.onAuthFailureError(Profile.this,error);
+
                             }
                         }){
                     @Override
                     public Map<String, String> getHeaders() {
                         Map<String, String> headers = new HashMap<String, String>();
-                        headers.put("Authorization", "Bearer " +  getIntent().getStringExtra("token"));
+                        headers.put("Authorization", "Bearer " +  Helper.loadToken(Profile.this));
                         headers.put("Content-Type", "application/json");
                         headers.put("Accept", "application/json");
                         return headers;
@@ -256,28 +245,15 @@ public class Profile extends AppCompatActivity {
                         , new Response.ErrorListener() {
                     @Override
                     public void onErrorResponse(VolleyError error) {
-                        String authResponseMessage = Helper.onAuthFailureError(error);
-                        if(!authResponseMessage.isEmpty()){
-                            Toast.makeText(Profile.this,"the trip is not booked " +
-                                    authResponseMessage
-                                    , Toast.LENGTH_SHORT).show();
-                            startActivity(new Intent(Profile.this, MainActivity.class));
-                        }
-                        else{
-                            String responseMessage = Helper.onErrorResponse(error);
-                            if(!responseMessage.isEmpty()){
-                                Toast.makeText(Profile.this,
-                                        "the trip is not booked error is " + responseMessage
-                                        , Toast.LENGTH_LONG).show();
-                            }
-                        }
+                        Helper.onAuthFailureError(Profile.this,error);
+
 
                     }
                 }){
                     @Override
                     public Map<String, String> getHeaders() {
                         Map<String, String> headers = new HashMap<String, String>();
-                        headers.put("Authorization", "Bearer " +  getIntent().getStringExtra("token"));
+                        headers.put("Authorization", "Bearer " +  Helper.loadToken(Profile.this));
                         headers.put("Content-Type", "application/json");
                         headers.put("Accept", "application/json");
                         return headers;
@@ -300,14 +276,61 @@ public class Profile extends AppCompatActivity {
         alertDialog.show();
     }
 
+    public void editProfile(){
+        //pops up a window to let the user input new sheet's information
+        AlertDialog.Builder builder = new AlertDialog.Builder(this);
+
+        builder.setTitle("Edit my profile");
+        View editLayout = getLayoutInflater().inflate(R.layout.dialog_edit_profile, null);
+        builder.setView(editLayout);
+        EditText firstNameText = findViewById(R.id.edit_first_name),
+                lastNameText = findViewById(R.id.edit_last_name),
+                phoneNumberText = findViewById(R.id.edit_phone_number),
+                previousPasswordText = findViewById(R.id.edit_previous_password),
+                passwordText = findViewById(R.id.edit_new_password),
+                passwordConfirmationText = findViewById(R.id.edit_new_password_confirmation);
+        builder.setPositiveButton("change", new DialogInterface.OnClickListener() {
+            @Override
+            public void onClick(DialogInterface dialogInterface, int i) {
+                if(firstNameText.getText().toString().isEmpty() ||
+                lastNameText.getText().toString().isEmpty() ||
+                phoneNumberText.getText().toString().isEmpty() ||
+                previousPasswordText.getText().toString().isEmpty() ||
+                passwordText.getText().toString().isEmpty() ||
+                passwordConfirmationText.getText().toString().isEmpty()){
+                    Toast.makeText(Profile.this, "enter missing data", Toast.LENGTH_SHORT).show();
+                }
+                else if(!passwordText.getText().toString().equals(passwordConfirmationText.getText().toString())){
+                    Toast.makeText(Profile.this
+                            , getResources().getString(R.string.password_doesnt_match)
+                            , Toast.LENGTH_SHORT).show();
+                }
+                else{
+                    String editFirstName = firstNameText.getText().toString(), editLastName = lastNameText.getText().toString(),
+                    editPhoneNumber = phoneNumberText.getText().toString(), editPassword = passwordText.getText().toString(),
+                    editPasswordConfirmation = passwordConfirmationText.getText().toString();
+
+                    // todo json object request
+                }
+            }
+        });
+        builder.setNegativeButton("cancel", new DialogInterface.OnClickListener() {
+            @Override
+            public void onClick(DialogInterface dialogInterface, int i) {
+                dialogInterface.cancel();
+            }
+        });
+
+        AlertDialog dialog = builder.create();
+
+        dialog.show();
+    }
+
 
 
     @Override
     public void onBackPressed() {
         Intent intent = new Intent(this, Trips.class);
-        intent.putExtra("passenger", passenger);
-        String token = getIntent().getStringExtra("token");
-        intent.putExtra("token", token);
         startActivity(intent);
     }
 }

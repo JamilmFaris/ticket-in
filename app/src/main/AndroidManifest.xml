@@ -3,7 +3,6 @@
     package="com.example.busreservationsystem">
 
     <uses-permission android:name="android.permission.INTERNET" />
-
     <uses-permission android:name="android.permission.VIBRATE" />
 
     <application
@@ -12,27 +11,22 @@
         android:label="@string/app_name"
         android:roundIcon="@mipmap/ic_launcher_round"
         android:supportsRtl="true"
-        android:theme="@style/Theme.BusReservationSystem">
+        android:theme="@style/Theme.Design.NoActionBar">
         <activity
             android:name=".Activities.Profile"
-            android:exported="false"
-            android:theme="@style/Theme.Design" />
+            android:exported="false" />
         <activity
             android:name=".Activities.Trips"
-            android:exported="false"
-            android:theme="@style/Theme.Design" />
+            android:exported="false" />
         <activity
             android:name=".Activities.Login"
-            android:exported="false"
-            android:theme="@style/Theme.Design" />
+            android:exported="false" />
         <activity
             android:name=".Activities.Signup"
-            android:exported="false"
-            android:theme="@style/Theme.Design" />
+            android:exported="false" />
         <activity
             android:name=".MainActivity"
-            android:exported="true"
-            android:theme="@style/Theme.Design">
+            android:exported="true">
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />
 
@@ -40,10 +34,7 @@
             </intent-filter>
         </activity>
 
-        <receiver android:name=".Notification.Notification$MyBroadcastReceiver" >
-        </receiver>
+        <receiver android:name=".Notification.Notification$MyBroadcastReceiver"></receiver>
     </application>
-
-
 
 </manifest>

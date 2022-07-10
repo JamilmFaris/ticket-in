@@ -82,7 +82,7 @@ public class Signup extends AppCompatActivity {
                 }
                 else if(!password.getText().toString().equals(passwordConfiramtion.getText().toString())){
                     Toast.makeText(getApplicationContext()
-                            , "password doesn't match with password confirmation"
+                            , getResources().getString(R.string.password_doesnt_match)
                             , Toast.LENGTH_SHORT).show();
                 }
                 else{
@@ -124,8 +124,8 @@ public class Signup extends AppCompatActivity {
                                     passengerObject.getString("phone_number")
                             );
                             curToken = response.getString("token");
-                            intent.putExtra("passenger", passenger);
-                            intent.putExtra("token", curToken);
+                            Helper.savePassenger(Signup.this, passenger);
+                            Helper.saveToken(Signup.this, curToken);
                             startActivity(intent);
                         } catch (JSONException e) {
                             e.printStackTrace();

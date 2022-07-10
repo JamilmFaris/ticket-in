@@ -3,7 +3,7 @@ package com.example.busreservationsystem.Helper;
 import com.example.busreservationsystem.MainActivity;
 
 public class Url {
-    private static String prefix = "http://192.168.1.104/ticket-in-backend/public";
+    private static String prefix = "http://192.168.1.107/ticket-in-backend/public";
     public static String getSignupUrl(){
         String url = prefix + "/api/v1/passengers/signup";
         return url;

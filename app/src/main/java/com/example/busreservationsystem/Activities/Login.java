@@ -105,8 +105,8 @@ public class Login extends AppCompatActivity {
                                     , passengerObject.getString("last_name")
                                     , passengerObject.getString("phone_number"));
                             String token = response.getString("token");
-                            intent.putExtra("passenger", passenger);
-                            intent.putExtra("token", token);
+                            Helper.savePassenger(Login.this, passenger);
+                            Helper.saveToken(Login.this, token);
                             startActivity(intent);
                         } catch (JSONException e) {
                             Toast.makeText(Login.this, "a problem occured"

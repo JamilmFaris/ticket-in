@@ -1,5 +1,6 @@
 package com.example.busreservationsystem;
 
+import androidx.annotation.Nullable;
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.recyclerview.widget.GridLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
@@ -44,15 +45,18 @@ public class MainActivity extends AppCompatActivity {
     public static Button login, signup;
 
 
-    public static String token = "";
+    public String token = "";
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
 
+        token = Helper.loadToken(this);
         /// if we have token then go to the Trips activity
         if(!token.isEmpty()){
-            startActivity(new Intent(this, Trips.class));
+            Intent intent = new Intent(this, Trips.class);
+            intent.putExtra("token", token);
+            startActivity(intent);
         }
 
 
@@ -78,31 +82,6 @@ public class MainActivity extends AppCompatActivity {
             }
         });
 
+
     }
-    @Override
-    protected void onPause() {
-        super.onPause();
-
-        // Creating a shared pref object
-        // with a file name "MySharedPref"
-        // in private mode
-        SharedPreferences sharedPreferences = getSharedPreferences("MySharedPref", MODE_PRIVATE);
-        SharedPreferences.Editor myEdit = sharedPreferences.edit();
-
-        // write all the data entered by the user in SharedPreference and apply
-        myEdit.putString("token", token);
-        myEdit.apply();
-    }
-
-    @Override
-    protected void onResume() {
-        super.onResume();
-
-        // Fetching the stored data
-        // from the SharedPreference
-        SharedPreferences sh = getSharedPreferences("MySharedPref", MODE_PRIVATE);
-        token = sh.getString("token", "");
-    }
-
-
 }

@@ -15,4 +15,20 @@
     <string name="trip_is_cancelled">trip is cancelled</string>
     <string name="go_to_profile">go to profile</string>
     <string name="edit">edit</string>
+
+    <!--to toggle the open close button
+        of the navigation drawer-->
+    <string name="nav_open">Open</string>
+    <string name="nav_close">Close</string>
+    <string name="logout">logout</string>
+    <string name="main">Main</string>
+    <string name="trips">Trips</string>
+    <string name="my_profile">My profile</string>
+    <string name="enter_previous_password">enter your new previous password</string>
+    <string name="enter_new_password">enter your new password</string>
+    <string name="enter_new_password_again">enter your new password again</string>
+    <string name="enter_new_first_name">enter your new first name</string>
+    <string name="enter_new_last_name">enter your new last name</string>
+    <string name="enter_your_new_phone_number">enter your new phone number</string>
+    <string name="password_doesnt_match">password doesn\'t match with password confirmation</string>
 </resources>

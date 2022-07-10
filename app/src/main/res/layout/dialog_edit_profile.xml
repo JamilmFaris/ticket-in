@@ -1,0 +1,96 @@
+<?xml version="1.0" encoding="utf-8"?>
+<androidx.constraintlayout.widget.ConstraintLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:background="@drawable/tripphoto"
+    >
+
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:orientation="vertical"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toTopOf="parent">
+
+        <LinearLayout
+            android:id="@+id/edit_name"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+
+            android:orientation="vertical"
+            app:layout_constraintEnd_toEndOf="parent"
+            app:layout_constraintStart_toStartOf="parent"
+
+            app:layout_constraintTop_toTopOf="parent">
+
+            <EditText
+                android:id="@+id/edit_first_name"
+                android:layout_width="wrap_content"
+                android:layout_height="50dp"
+
+
+                android:maxEms="10"
+                android:hint="@string/enter_new_first_name"
+                android:textSize="30sp"
+
+                />
+
+            <EditText
+                android:id="@+id/edit_last_name"
+                android:layout_width="wrap_content"
+                android:layout_height="50dp"
+
+                android:layout_marginTop="10dp"
+                android:maxEms="10"
+
+
+                android:hint="@string/enter_new_last_name"
+                android:textSize="30sp" />
+        </LinearLayout>
+
+        <EditText
+            android:id="@+id/edit_phone_number"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="10dp"
+            android:hint="@string/enter_your_new_phone_number"
+
+            />
+
+
+        <EditText
+            android:id="@+id/edit_previous_password"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="10dp"
+            android:hint="@string/enter_previous_password"
+
+            />
+
+        <EditText
+            android:id="@+id/edit_new_password"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="10dp"
+            android:hint="@string/enter_new_password"
+
+            />
+
+        <EditText
+            android:id="@+id/edit_new_password_confirmation"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="10dp"
+            android:hint="@string/enter_new_password_again"
+
+            />
+
+
+    </LinearLayout>
+
+
+
+
+</androidx.constraintlayout.widget.ConstraintLayout>

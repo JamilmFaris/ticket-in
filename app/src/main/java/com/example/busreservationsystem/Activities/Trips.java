@@ -1,7 +1,13 @@
 package com.example.busreservationsystem.Activities;
 
+import androidx.activity.result.ActivityResultCallback;
+import androidx.activity.result.ActivityResultCallback;
+import androidx.activity.result.ActivityResultLauncher;
+import androidx.activity.result.contract.ActivityResultContracts;
+import androidx.annotation.Nullable;
 import androidx.appcompat.app.AlertDialog;
 import androidx.appcompat.app.AppCompatActivity;
+import androidx.appcompat.widget.Toolbar;
 import androidx.core.widget.NestedScrollView;
 import androidx.recyclerview.widget.GridLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
@@ -11,6 +17,7 @@ import android.app.PendingIntent;
 import android.content.DialogInterface;
 import android.content.Intent;
 import android.graphics.Color;
+import android.net.Uri;
 import android.os.Bundle;
 import android.text.Editable;
 import android.text.TextWatcher;
@@ -30,6 +37,7 @@ import com.android.volley.toolbox.StringRequest;
 import com.android.volley.toolbox.Volley;
 import com.example.busreservationsystem.Adapter.TripsAdapter;
 import com.example.busreservationsystem.ClickListener.ClickListener;
+import com.example.busreservationsystem.Helper.DrawerUtil;
 import com.example.busreservationsystem.Helper.Helper;
 import com.example.busreservationsystem.Helper.Url;
 import com.example.busreservationsystem.MainActivity;
@@ -73,9 +81,10 @@ public class Trips extends AppCompatActivity {
     String selectedCompanyHandle = "";
     String selectedSourceSlug = "";
     String selectedDestinationSlug = "";
-    Button goToProfile ;
     NestedScrollView nestedScrollView;
-    int tripsPage = 0;
+    int tripsPage = 0, limit;
+    String token;
+    Toolbar toolbar;
 
 
 
@@ -93,10 +102,11 @@ public class Trips extends AppCompatActivity {
         sourceFilter = findViewById(R.id.source_filter);
         destinationFilter = findViewById(R.id.destination_filter);
         queue = Volley.newRequestQueue(this);
-        goToProfile = findViewById(R.id.go_to_profile);
-        Intent goToProfileIntent = new Intent(this, Profile.class);
-        getCitiesSlug();
-        getCompaniesHandle();
+        /*toolbar = findViewById(R.id.toolbar);
+        toolbar.setTitle("toolbar");
+        setSupportActionBar(toolbar);
+
+        DrawerUtil.getDrawer(this,toolbar);*/
 
         //
 
@@ -256,19 +266,6 @@ public class Trips extends AppCompatActivity {
         tripsAdapter.addItems(trips);*/
         tripsView.setAdapter(tripsAdapter);
 
-        //goToProfile
-        goToProfile.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View view) {
-                Passenger passenger = (Passenger) getIntent().getSerializableExtra("passenger");
-                goToProfileIntent.putExtra("passenger"
-                        , passenger);
-                goToProfileIntent.putExtra("token"
-                        , getIntent().getSerializableExtra("token"));
-                startActivity(goToProfileIntent);
-            }
-        });
-
         //nestedScrollView
         nestedScrollView.setOnScrollChangeListener(new NestedScrollView.OnScrollChangeListener() {
             @Override
@@ -345,26 +342,12 @@ public class Trips extends AppCompatActivity {
                     }
                 },
                 error -> {
-                    String authResponseMessage = Helper.onAuthFailureError(error);
-                    if(!authResponseMessage.isEmpty()){
-                        Toast.makeText(this,
-                                authResponseMessage
-                                , Toast.LENGTH_SHORT).show();
-                        startActivity(new Intent(this, MainActivity.class));
-                    }
-                    else{
-                        String responseMessage = Helper.onErrorResponse(error);
-                        if(!responseMessage.isEmpty()){
-                            Toast.makeText(this,
-                                    responseMessage
-                                    , Toast.LENGTH_LONG).show();
-                        }
-                    }
+                    Helper.onAuthFailureError(Trips.this, error);
                 }){
             @Override
             public Map<String, String> getHeaders() {
                     Map<String, String> headers = new HashMap<String, String>();
-                    headers.put("Authorization", "Bearer " +  getIntent().getStringExtra("token"));
+                    headers.put("Authorization", "Bearer " +  token);
                     headers.put("Content-Type", "application/json");
                     headers.put("Accept", "application/json");
                     return headers;
@@ -398,9 +381,10 @@ public class Trips extends AppCompatActivity {
                                 Trip curTrip = trips.get(index);
                                 Calendar cal = Calendar.getInstance();
                                 cal.set(Calendar.YEAR, curTrip.year);
-                                cal.set(Calendar.MONTH, curTrip.month );
+                                cal.set(Calendar.MONTH, curTrip.month );// is subtracted by one in the Trip class
                                 cal.set(Calendar.DAY_OF_MONTH, curTrip.day );
                                 cal.set(Calendar.HOUR, curTrip.hour);
+                                cal.add(Calendar.HOUR, -12);
                                 cal.set(Calendar.MINUTE, curTrip.min);
                                 cal.set(Calendar.SECOND, curTrip.sec);
                                 Notification.setAlert(Trips.this, cal
@@ -412,27 +396,13 @@ public class Trips extends AppCompatActivity {
                         , new Response.ErrorListener() {
                     @Override
                     public void onErrorResponse(VolleyError error) {
-                        String authResponseMessage = Helper.onAuthFailureError(error);
-                        if(!authResponseMessage.isEmpty()){
-                            Toast.makeText(Trips.this,
-                                    authResponseMessage
-                                    , Toast.LENGTH_SHORT).show();
-                            startActivity(new Intent(Trips.this, MainActivity.class));
-                        }
-                        else{
-                            String responseMessage = Helper.onErrorResponse(error);
-                            if(!responseMessage.isEmpty()){
-                                Toast.makeText(Trips.this,
-                                        responseMessage
-                                        , Toast.LENGTH_LONG).show();
-                            }
-                        }
+                        Helper.onAuthFailureError(Trips.this, error);
                     }
                 }){
                     @Override
                     public Map<String, String> getHeaders() {
                         Map<String, String> headers = new HashMap<String, String>();
-                        headers.put("Authorization", "Bearer " +  getIntent().getStringExtra("token"));
+                        headers.put("Authorization", "Bearer " +  token);
                         headers.put("Content-Type", "application/json");
                         headers.put("Accept", "application/json");
                         return headers;
@@ -479,27 +449,14 @@ public class Trips extends AppCompatActivity {
                         new Response.ErrorListener() {
                             @Override
                             public void onErrorResponse(VolleyError error) {
-                                String authResponseMessage = Helper.onAuthFailureError(error);
-                                if(!authResponseMessage.isEmpty()){
-                                    Toast.makeText(Trips.this,
-                                            authResponseMessage
-                                            , Toast.LENGTH_SHORT).show();
-                                    startActivity(new Intent(Trips.this, MainActivity.class));
-                                }
-                                else{
-                                    String responseMessage = Helper.onErrorResponse(error);
-                                    if(!responseMessage.isEmpty()){
-                                        Toast.makeText(Trips.this,
-                                                responseMessage
-                                                , Toast.LENGTH_LONG).show();
-                                    }
-                                }
+                                Helper.onAuthFailureError(Trips.this, error);
+
                             }
                         }){
                     @Override
                     public Map<String, String> getHeaders() {
                         Map<String, String> headers = new HashMap<String, String>();
-                        headers.put("Authorization", "Bearer " +  getIntent().getStringExtra("token"));
+                        headers.put("Authorization", "Bearer " +  token);
                         headers.put("Content-Type", "application/json");
                         headers.put("Accept", "application/json");
                         return headers;
@@ -545,27 +502,14 @@ public class Trips extends AppCompatActivity {
                 new Response.ErrorListener() {
                     @Override
                     public void onErrorResponse(VolleyError error) {
-                        String authResponseMessage = Helper.onAuthFailureError(error);
-                        if(!authResponseMessage.isEmpty()){
-                            Toast.makeText(Trips.this,
-                                    authResponseMessage
-                                    , Toast.LENGTH_SHORT).show();
-                            startActivity(new Intent(Trips.this, MainActivity.class));
-                        }
-                        else{
-                            String responseMessage = Helper.onErrorResponse(error);
-                            if(!responseMessage.isEmpty()){
-                                Toast.makeText(Trips.this,
-                                        responseMessage
-                                        , Toast.LENGTH_LONG).show();
-                            }
-                        }
+                        Helper.onAuthFailureError(Trips.this, error);
+
                     }
                 }){
             @Override
             public Map<String, String> getHeaders() {
                 Map<String, String> headers = new HashMap<String, String>();
-                headers.put("Authorization", "Bearer " +  getIntent().getStringExtra("token"));
+                headers.put("Authorization", "Bearer " +  token);
                 headers.put("Content-Type", "application/json");
                 headers.put("Accept", "application/json");
                 return headers;
@@ -600,27 +544,13 @@ public class Trips extends AppCompatActivity {
                 new Response.ErrorListener() {
                     @Override
                     public void onErrorResponse(VolleyError error) {
-                        String authResponseMessage = Helper.onAuthFailureError(error);
-                        if(!authResponseMessage.isEmpty()){
-                            Toast.makeText(Trips.this,
-                                    authResponseMessage
-                                    , Toast.LENGTH_SHORT).show();
-                            startActivity(new Intent(Trips.this, MainActivity.class));
-                        }
-                        else{
-                            String responseMessage = Helper.onErrorResponse(error);
-                            if(!responseMessage.isEmpty()){
-                                Toast.makeText(Trips.this,
-                                        responseMessage
-                                        , Toast.LENGTH_LONG).show();
-                            }
-                        }
+                        Helper.onAuthFailureError(Trips.this, error);
                     }
                 }){
             @Override
             public Map<String, String> getHeaders() {
                 Map<String, String> headers = new HashMap<String, String>();
-                headers.put("Authorization", "Bearer " +  getIntent().getStringExtra("token"));
+                headers.put("Authorization", "Bearer " +  token);
                 headers.put("Content-Type", "application/json");
                 headers.put("Accept", "application/json");
                 return headers;
@@ -631,10 +561,26 @@ public class Trips extends AppCompatActivity {
     }
 
     @Override
-    public void onBackPressed() {
-        MainActivity.token = "";
-        startActivity(new Intent(this, MainActivity.class));
+    protected void onPause() {
+        Helper.saveToken(this, token);
+        super.onPause();
+    }
+    @Override
+    protected void onStart() {
+        super.onStart();
+        getCitiesSlug();
+        getCompaniesHandle();
+        token = Helper.loadToken(this);
+        toolbar = findViewById(R.id.toolbar);
+        toolbar.setTitle("");
+        setSupportActionBar(toolbar);
+
+        DrawerUtil.getDrawer(this,toolbar);
     }
 
-
+    @Override
+    public void onBackPressed() {
+        super.onBackPressed();
+        Helper.removeToken(this);
+    }
 }
